@@ -1,0 +1,479 @@
+---
+title: "Walmart's Weekly Sales Linear Regression"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: xelatex
+  html_notebook: default
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+***
+
+```{r}
+library("tidyverse")
+library("tidymodels")
+library("tidylog")
+
+```
+
+
+```{r}
+
+# Reading in the Walmart dataset:
+
+dfw <- read_csv("data/walmart.csv") %>% 
+  rename_with(tolower) %>% 
+  arrange(store)
+
+
+head(dfw)
+
+```
+```{r}
+#An overview of our dataset's structure
+
+str(dfw)
+```
+
+```{r}
+#An overview of the data
+
+head(dfw)
+```
+
+```{r}
+
+#The structure of the data and each column's data type.  Note that isholiday is a logical (i.e., true/false) predictor variable
+
+str(dfw)
+
+```
+
+
+<h1 style="text-align:center;">Simple Linear Regression Model</h1>
+
+#### We will begin by running a simple linear model that regresses weekly sales onto Consumer Price Index (CPI)
+
+
+```{r}
+# Specifying our model type and setting the computational engine
+
+linear_model <- 
+  linear_reg() %>% 
+  set_engine("lm")
+
+# Fitting the model
+
+fit_cpi <- 
+  linear_model %>% 
+  fit(weekly_sales ~ cpi, data = dfw)
+  
+# Model output 
+
+summary(fit_cpi$fit)
+
+```
+
+
+##### In this model, a Walmart store with a theoretical square footage of 0 can expect its weekly sales to be **~$828,280** if CPI is held constant.  We also observe that the relationship between Weekly_Sales and CPI is negative.  That is, if CPI increases by one unit, weekly sales will decrease by ~$733; and if CPI decreases by one unit, sales would increase by ~$733.
+
+
+##### In evaluating the model statistics, we can see an Adjusted R_Squared value of 0.005269. In other words, this model explains only roughly 0.5% of the variance in Walmart's weekly sales.  So, while our interpretation of the *effect* of CPI on Weekly_Sales is still valid, we must conclude that this model appears to fail in explaining the variance in our target variable.
+
+
+```{r}
+# Now we will plot the affect of CPI on sales for a few different stores in the dataset, starting with store 10.
+
+plot_store_10 <- 
+  dfw %>% 
+  filter(store == 10) %>% 
+  ggplot(aes(x = cpi, y = weekly_sales)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = 'Weekly Sales vs. CPI for Store 10', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+
+plotly::ggplotly(plot_store_10)
+
+
+plot_store_11 <- 
+  dfw %>% 
+  filter(store == 11) %>% 
+  ggplot(aes(x = cpi, y = weekly_sales)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = 'Weekly Sales vs. CPI for Store 11', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+
+plotly::ggplotly(plot_store_11)
+
+plot_store_12 <- 
+  dfw %>% 
+  filter(store == 10) %>% 
+  ggplot(aes(x = cpi, y = weekly_sales)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = 'Weekly Sales vs. CPI for Store 12', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+
+plotly::ggplotly(plot_store_12)
+
+plot_store_13 <- 
+  dfw %>% 
+  filter(store == 13) %>% 
+  ggplot(aes(x = cpi, y = weekly_sales)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    labs(title = 'Weekly Sales vs. CPI for Store 13', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+
+plotly::ggplotly(plot_store_13)
+
+```
+
+```{r}
+
+# A plot to demonstrate the fluctuation of CPI by region/store.  Note that the
+# smoothed line is negative in some locales and positive in others.
+
+animated_plot <- 
+    dfw %>% 
+    filter(store %in% c(11:15)) %>% 
+    ggplot(aes(x = cpi, y = weekly_sales)) + 
+    geom_point() + 
+    geom_smooth(method = lm) +
+    labs(title = 'Weekly Sales vs. CPI for Store {closest_state}', x = 'Consumer Price Index', y = 'Weekly Sales (USD)') +
+    theme_minimal() + 
+    gganimate::transition_states(store, transition_length = 1, state_length = 2) +
+    gganimate::view_follow()
+
+animated_plot
+```
+
+
+##### What we observe here is that the impact of CPI can vary greatly by store/region.  This still aligns with our evaluation of fit_cpi because we recall that that particular model explained only a small amount (~5%) of the variance in Weekly_Sales, so we would expect to see these kinds of swings.  With a (much) higher Adjusted R-Squared, these variations would look unusual.
+
+
+```{r}
+
+dfw %>%
+  group_by(store) %>%
+  group_modify(~ tidy(lm(weekly_sales ~ ., data = .x))) %>%
+  filter(term == "cpi")
+
+```
+
+
+```{r}
+# Filtering for 2012 and plotting CPI against Weekly_Sales
+
+plot <- dfw %>%
+	      	filter(lubridate::year(date) == 2012) %>%
+	          ggplot(aes(x=cpi, y = weekly_sales)) +
+	          geom_point() +
+ 	        	geom_smooth(method=lm)
+    labs(title = 'Weekly Sales vs. CPI for Store 12', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+    
+plotly::ggplotly(plot)
+
+```
+
+
+##### We see an interesting effect when we filter for one specific year. The clusters are nearly vertical because CPI is calculated geographically, with either Core Based Statistical Area (CBSA) or Metropolitan Statistical Area (MSA).  CPI might be the same in a particular region, but different stores in that region will have different sales volume, hence the vertical clusters.
+
+
+```{r}
+# Now let's look exclusively at store 10
+
+plot_store_cpi <- dfw %>%
+      		filter(store==10, lubridate::year(date)==2012) %>%
+      	    ggplot(aes(x=cpi, y = weekly_sales)) +
+      	    geom_point() +
+            geom_smooth(method=lm)
+    labs(title = 'Weekly Sales vs. CPI for Store 10 in 2012', x = 'Consumer Price Index', y = 'Weekly   Sales (USD)') +
+  theme_minimal()
+
+plotly::ggplotly(plot_store_cpi)
+```
+
+
+##### Although CPI varies by region, the deviation in CPI across time for a single region tends to be much lower, which is why we see such a slim range here. Since CPI is a measure of inflation, we expect to see these regional effects.
+
+
+```{r}
+
+# A new iteration of the previous model that also includes store Size as an independent variable
+
+fit_cpi_size <- 
+  linear_model %>% 
+  fit(weekly_sales ~ cpi + size, data = dfw)
+
+summary(fit_cpi_size$fit)
+
+```
+
+```{r}
+# Comparing fit_cpi to fit_size to see which is better at explaining the variance in Weekly_Sales
+
+anova(fit_cpi$fit, fit_cpi_size$fit)
+```
+
+
+##### The model that includes size as a predictor variable (fit_cpi_size) appears to perform significantly better than fit_cpi.  Adjusted R-Square now explains ~62% of the variance in rentals and the ANOVA test confirms that including size is statistically significant.
+
+
+```{r}
+tidy(fit_cpi$fit)
+tidy(fit_cpi_size$fit)
+```
+
+
+##### Note also that the coefficient in the revised model has been reduced from ~$733 to ~$657.  This is simply due to the fact that size is now explaining more of the variance that was left unexplained by the previous model that only included CPI.
+
+
+```{r}
+# Building a model that uses all variables EXCEPT Date and Store
+
+fit_full <- 
+  linear_model %>% 
+  fit(weekly_sales ~ . - store - date, data = dfw)
+
+summary(fit_full$fit)
+
+```
+```{r}
+anova(fit_cpi_size$fit, fit_full$fit)
+```
+
+
+##### We observe a further, though slight improvement in the Adjusted R-Squared value in the new model that eliminates temporal and regional effects (fit_full).  The ANOVA test also confirms that the improvement in explanatory power is indeed statistically significant.
+
+<h1 style="text-align:center;">More Linear Regression</h1>
+
+##### We hypothesize that the effect of good weather is increased on holidays.  We can test this by revising fit_full and including an interaction term.
+
+
+```{r}
+fit_full_int <- 
+  linear_model %>% 
+  fit(weekly_sales ~ . - store - date + isholiday * temperature, data = dfw)
+
+summary(fit_full_int$fit)
+```
+```{r}
+anova(fit_full$fit, fit_full_int$fit)
+```
+
+
+##### Although the results of our fit_full_int model demonstrate that the effect of good weather is indeed more significant on holidays, the ANOVA test shows no statistically significant improvement.  We cannot assert definitively that this model with the interaction term is an improvement.
+
+##### We'll also test whether the effect of temperature on weekly sales is linear by squaring that variable.
+
+
+```{r}
+fit_full_sq <- 
+  linear_model %>% 
+  fit(weekly_sales ~ . - store - date + I(temperature ^2), data = dfw)
+
+summary(fit_full_sq$fit)
+```
+```{r}
+anova(fit_full$fit, fit_full_sq$fit)
+```
+
+```{r}
+## Plotting the relationship between Temperature^2 and Weekly Sales 
+
+dfw %>%
+  ggplot(aes(x = temperature, y = weekly_sales)) + 
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
+
+```
+
+
+##### The model output demonstrates a curvilinear, or inverted U-shaped relationship (visualized below).  People are less likely to shop retail on a freezing cold day. Increasing temperatures are associated with increased sales, but only to a point.  As temperatures become excessive and dangerous, sales start to decrease.
+
+##### If we were managing Walmart's promotions we could offer larger discounts when the whether is at either extreme and perhaps even increase the price of certain products when the temperature is mild.
+
+<h1 style="text-align:center;">Predictive Analytics</h1>
+
+##### Now that we have a model that is fairly robust we will use it to make predictions of weekly sales revenue.
+
+
+```{r}
+# Setting seed for reproducibility
+
+set.seed(3.14159)
+
+# Splitting the data set into a training dataset (75%) and a test dataset (25%)
+
+dfw_split <- initial_split(dfw)
+
+dfw_train <-  training(dfw_split)
+
+dfw_test <- testing(dfw_split)
+```
+
+```{r}
+# Fitting the model
+
+fit_org <- 
+  linear_model %>% 
+  fit(weekly_sales ~ . - date - store + I(temperature^2), data = dfw_train)
+
+summary(fit_org$fit)
+  
+```
+
+```{r}
+# The linear regression output as a tibble
+
+tidy(fit_org)
+```
+```{r}
+
+# Creating a new dataframe with predicted values
+
+results_org <-
+  predict(fit_org, new_data = dfw_test) %>% 
+  bind_cols(dfw_test) %>% 
+  rename(Predicted_Sales = .pred)
+
+results_org %>% 
+  arrange(date)
+
+```
+
+```{r}
+# Defining the metric set we will be working with to evaluate the models
+
+perf_metrics <- metric_set(rmse, mae)
+```
+
+
+```{r}
+
+# Calculating the performance of fit
+
+perf_metrics(results_org, truth =  weekly_sales, estimate = Predicted_Sales)
+```
+
+
+##### These metrics indicate that our model is off by ~$240,424 according to RMSE and ~$179,092 MAE.  These numbers appear alarming until one recalls that the range of weekly sales by Walmart store location is about $70k to $2.8 million, with a mean of $740k and a median of $689k.
+
+
+```{r}
+#Building the model without I(Temperature^2) variable using only the training data set
+
+fit_org_nosq <-
+  linear_model %>% 
+  fit(weekly_sales ~ . - store - date, data = dfw_train)
+
+```
+
+```{r}
+summary(fit_org_nosq$fit)
+```
+
+
+```{r}
+#Comparing the models
+
+anova(fit_org$fit, fit_org_nosq$fit)
+```
+
+
+```{r}
+#Creating a new dataframe results_org_nosq with predictions
+
+results_org_nosq <-
+  predict(fit_org_nosq, new_data = dfw_test) %>% 
+  bind_cols(dfw_test) %>% 
+  rename(Predicted_Sales = .pred)
+
+#Calculating performance metrics
+
+perf_metrics(results_org_nosq, truth =  weekly_sales, estimate = Predicted_Sales)
+```
+
+
+##### When we remove the temperature term, something notable occurs.  First, our Adjusted R-Squared value diminishes slighlty (from 62.2% to 62.1%), making it a slightly less appealing model in terms of explaining the variance in weekly sales.  However, we also observe that the error has been reduced, making fit_nosq relatively superior in terms of predictive capability. Since we are trying to build a reliable *predictive* model, we exclude the term and conclude that fit_nosq is better for that purpose.
+
+<h1 style="text-align:center;">More Predictive Modeling</h1>
+
+##### We are fairly pleased with both the explanatory and predictive power of fit_nosq but of course we would like to improve upon both metrics.  One issue that we have not yet discussed is the variability in weekly sales across Walmart locations, as shown below.
+
+
+```{r}
+# Calculating total weekly sales per store
+
+sales_by_store <- aggregate(weekly_sales ~ store, data = dfw, sum)
+
+# A bar chart showing the distribution of weekly sales revenue by store
+
+ggplot(sales_by_store, aes(x = store, y = weekly_sales)) +
+  geom_bar(stat = "identity", fill = "#0078D4") +
+  labs(title = "Total Weekly Sales by Store", x = "Store Number", y = "Total Weekly Sales")
+
+```
+
+
+##### Viewing the bar chart, we can see that standardizing the weekly_sales variable could improve our model.  One way we could do this is by transforming the scale of weekly sales, transforming each value to its natural logarithmic value.  We'll use the log() function to accomplish this.
+
+
+```{r}
+# Log model with all other variables unchanged
+dfw_log <-
+  dfw %>% 
+  mutate(log_sales = log(weekly_sales))
+
+dfw_log
+```
+```{r}
+set.seed(3.14159)
+
+dfwlog_split <- initial_split(dfw_log)
+dfwlog_train <- training(dfwlog_split)
+dfwlog_test <- testing(dfwlog_split)
+```
+
+```{r}
+fit_log <- 
+  linear_model %>% 
+  fit(log_sales ~ . - store - date - weekly_sales, data=dfwlog_train)
+
+summary(fit_log$fit)
+```
+##### This final model uses a log-linear regression to explain weekly Walmart sales using store-level, economic, and seasonal predictors. Applying a log transformation to weekly sales substantially improves model performance, yielding an adjusted R² of 0.71, and stabilizes variance across stores with vastly different revenue scales. Overall model fit is strong, with well-behaved residuals and a highly significant F-statistic, indicating that the included predictors jointly explain a meaningful share of sales variation.
+```{r}
+```
+##### Results show that store size is the dominant driver of weekly sales, dwarfing macroeconomic effects and confirming that physical scale largely determines revenue potential. Holiday weeks are associated with an average 6–7% increase in sales, validating the importance of seasonal demand spikes. Inflation, proxied by CPI, has a small but statistically significant negative relationship with sales, even after controlling for store characteristics. Temperature and unemployment exhibit modest effects consistent with economic intuition, while fuel prices do not appear to meaningfully impact sales once other factors are accounted for.
+```{r}
+```
+##### This specification represents the best balance between interpretability, explanatory power, and robustness among the models tested. The log transformation enables clear percentage-based interpretations while materially improving fit relative to linear alternatives, making the model suitable for both analytical insight and downstream forecasting.
+
+<h1 style="text-align:center;">Limitiations</h1>
+
+##### - The model does not explicitly account for store-level fixed effects or regional hierarchies, which may mask persistent location-specific dynamics.
+
+##### - Temporal structure is handled implicitly; autocorrelation and seasonality are not directly modeled.
+
+##### - The analysis assumes linear relationships on the log scale and may understate nonlinear or interaction effects beyond those tested.
+
+##### - CPI and unemployment are measured at broader geographic levels and may not fully capture local economic conditions.
+
+<h1 style="text-align:center;">Next Steps</h1>
+
+##### - Implement mixed-effects (hierarchical) models to capture store-specific variation.
+
+##### - Explore time-series approaches for improved short-term forecasting.
+
+##### - Incorporate promotional data, foot traffic, or local demographic variables to enhance predictive accuracy.
