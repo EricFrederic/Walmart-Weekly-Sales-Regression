@@ -1,12 +1,12 @@
 ## **Walmart Weekly Sales Regression Analysis**
 
-Overview
+**Overview**
 
 This project analyzes the drivers of Walmart’s weekly store-level sales using linear regression and predictive modeling in R. The analysis progresses from simple linear models to more robust multivariate and log-linear specifications, with an emphasis on both explanatory insight and predictive performance.
 
 The final model demonstrates that store characteristics and seasonality dominate sales outcomes, while macroeconomic indicators such as inflation and unemployment play smaller but statistically meaningful roles.
 
-Dataset
+**Dataset**
 
 The dataset contains weekly observations for multiple Walmart stores and includes the following variables:
 
@@ -30,7 +30,7 @@ isholiday – Holiday week indicator
 
 CPI is measured at the CBSA/MSA level, introducing regional clustering effects explored during the analysis.
 
-Modeling Approach
+**Modeling Approach**
 
 The analysis follows a structured modeling workflow:
 
@@ -48,25 +48,25 @@ Log transformation of weekly sales to address scale and heteroskedasticity
 
 Models are evaluated using Adjusted R², RMSE, and MAE, with careful distinction between explanatory fit and predictive accuracy.
 
-Final Model Summary
+**Final Model Summary**
 
 The final specification uses a log-linear regression with weekly sales transformed to their natural logarithm. This model achieves an Adjusted R² of approximately 0.71, substantially improving fit and stabilizing variance across stores with widely differing revenue levels.
 
 Key findings include:
 
-Store size is the strongest predictor of weekly sales
++ Store size is the strongest predictor of weekly sales
 
-Holiday weeks increase sales by roughly 6–7%
++ Holiday weeks increase sales by roughly 6–7%
 
-CPI has a statistically significant negative relationship with sales
++ CPI has a statistically significant negative relationship with sales
 
-Temperature and unemployment have modest, intuitive effects
+T+ emperature and unemployment have modest, intuitive effects
 
-Fuel prices do not meaningfully impact sales once other factors are controlled for
++ Fuel prices do not meaningfully impact sales once other factors are controlled for
 
-This model provides a strong balance of interpretability, robustness, and practical relevance.
++ This model provides a strong balance of interpretability, robustness, and practical relevance.
 
-Predictive Performance
+**Predictive Performance**
 
 Using a 75/25 train-test split, the final predictive model achieves:
 
@@ -76,7 +76,7 @@ MAE: ≈ $179,000
 
 Given that weekly store sales range from approximately $70K to $2.8M, these error levels are considered reasonable.
 
-Tools & Libraries
+**Tools & Libraries**
 
 tidyverse – Data manipulation and visualization
 
@@ -99,7 +99,7 @@ Repository Structure
 └── outputs/
     └── walmart_sales_analysis.html
 
-How to Run
+**How to Run**
 
 Clone the repository
 
@@ -109,7 +109,7 @@ Open walmart_sales_analysis.Rmd in RStudio
 
 Knit to HTML or PDF
 
-Limitations
+**Limitations**
 
 Store-level fixed effects are not explicitly modeled
 
@@ -119,7 +119,7 @@ Some economic indicators are measured at broader geographic levels
 
 Linear assumptions may obscure more complex nonlinear dynamics
 
-Next Steps
+**Next Steps**
 
 Implement mixed-effects models to capture store-specific variation
 
@@ -129,6 +129,6 @@ Apply regularization (LASSO/Ridge) for feature selection
 
 Incorporate promotional or demographic data if available
 
-Author
+**Author**
 
 Eric Frederic
