@@ -1,4 +1,4 @@
-Walmart Weekly Sales Regression Analysis
+**Walmart Weekly Sales Regression Analysis**
 Overview
 
 This project analyzes the drivers of Walmart’s weekly store-level sales using linear regression and predictive modeling in R. The analysis progresses from simple linear models to more robust multivariate and log-linear specifications, with an emphasis on both explanatory insight and predictive performance.
