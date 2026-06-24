@@ -51,15 +51,16 @@ Models are evaluated using Adjusted R², RMSE, and MAE with careful distinction 
 
 ## Key Findings
 
-![Sales by Store](screenshots/sales_by_store.png)
+<img width="349" height="322" alt="log_bar" src="https://github.com/user-attachments/assets/b2bd85ed-19dd-4d3c-82d6-5e82b0c0ce6f" />
+
 
 Weekly sales vary significantly across store locations, motivating the log transformation that becomes the core modeling decision.
 
-![CPI vs Weekly Sales](screenshots/cpi_vs_sales.png)
+<img width="342" height="324" alt="CPI" src="https://github.com/user-attachments/assets/1c92264a-c435-434a-82a3-b004ff34e64c" />
 
 The relationship between CPI and sales varies by region and reverses sign across store clusters — a finding that explains why CPI alone accounts for less than 1% of sales variance.
 
-![Temperature Curve](screenshots/temperature_curve.png)
+<img width="353" height="326" alt="temp_curve" src="https://github.com/user-attachments/assets/2cd3f6ef-63f3-43e5-b060-a3fdca88dc14" />
 
 Temperature has a curvilinear effect on sales — an inverted U-shape consistent with consumer behavior. Neither extreme cold nor extreme heat is good for foot traffic.
 
