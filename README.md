@@ -1,4 +1,4 @@
-# Walmart Weekly Sales — Regression Analysis in R
+# Walmart Weekly Sales: Regression Analysis in R
 
 **Author:** Eric A. Frederic, MBA  
 **Tools:** R | tidymodels | ggplot2 | tidyverse  
