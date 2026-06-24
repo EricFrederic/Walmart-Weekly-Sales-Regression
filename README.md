@@ -1,134 +1,133 @@
-## **Walmart Weekly Sales Regression Analysis**
+# Walmart Weekly Sales — Regression Analysis in R
 
-**Overview**
+**Author:** Eric A. Frederic, MBA  
+**Tools:** R | tidymodels | ggplot2 | tidyverse  
+**Full Notebook:** [View on Kaggle](https://www.kaggle.com/code/ericfrederic/analyzing-drivers-of-walmart-weekly-sales-regress)
 
-This project analyzes the drivers of Walmart’s weekly store-level sales using linear regression and predictive modeling in R. The analysis progresses from simple linear models to more robust multivariate and log-linear specifications, with an emphasis on both explanatory insight and predictive performance.
+---
 
-The final model demonstrates that store characteristics and seasonality dominate sales outcomes, while macroeconomic indicators such as inflation and unemployment play smaller but statistically meaningful roles.
+## Business Problem
 
-**Dataset**
+What actually drives weekly sales at a large retail chain? This project uses linear regression and predictive modeling to identify the key drivers of Walmart's weekly store-level sales revenue, progressing from simple single-variable models to a robust log-linear specification that explains 71% of the variance in sales outcomes.
 
-The dataset contains weekly observations for multiple Walmart stores and includes the following variables:
+The analysis distinguishes between explanatory fit and predictive accuracy throughout — two related but distinct analytical goals that require different evaluation criteria.
 
-weekly_sales – Weekly sales revenue (USD)
+---
 
-store – Store identifier
+## Dataset
 
-date – Week of observation
+Weekly observations for 45 Walmart store locations. Key variables:
 
-size – Store size
+| Variable | Description |
+|----------|-------------|
+| `weekly_sales` | Weekly sales revenue (USD) — target variable |
+| `store` | Store identifier |
+| `date` | Week of observation |
+| `size` | Store square footage |
+| `temperature` | Average weekly temperature |
+| `fuel_price` | Regional fuel price |
+| `cpi` | Consumer Price Index (CBSA/MSA level) |
+| `unemployment` | Regional unemployment rate |
+| `isholiday` | Holiday week indicator (TRUE/FALSE) |
 
-temperature – Average weekly temperature
+**Note:** CPI is measured at the Core Based Statistical Area level, introducing regional clustering effects explored during the analysis.
 
-fuel_price – Fuel price
+---
 
-cpi – Consumer Price Index (regional)
+## Modeling Approach
 
-unemployment – Unemployment rate
+The analysis follows a structured progression from simple to complex:
 
-isholiday – Holiday week indicator
+1. **Simple linear regression** — CPI as standalone predictor (Adjusted R² ≈ 0.005)
+2. **Store-level visualization** — Regional heterogeneity in CPI effects
+3. **Multivariate regression** — Adding store size as predictor (Adjusted R² ≈ 0.62)
+4. **Interaction and nonlinear terms** — Holiday × temperature interaction; temperature²
+5. **Train/test split** — 75/25 split for out-of-sample predictive evaluation
+6. **Log-linear transformation** — Log(weekly_sales) to address scale and heteroskedasticity (Adjusted R² ≈ 0.71)
 
-CPI is measured at the CBSA/MSA level, introducing regional clustering effects explored during the analysis.
+Models are evaluated using Adjusted R², RMSE, and MAE with careful distinction between explanatory and predictive performance.
 
-**Modeling Approach**
+---
 
-The analysis follows a structured modeling workflow:
+## Key Findings
 
-Simple linear regression to assess CPI’s standalone effect
+![Sales by Store](screenshots/sales_by_store.png)
 
-Store-level visualizations to explore regional heterogeneity
+Weekly sales vary significantly across store locations, motivating the log transformation that becomes the core modeling decision.
 
-Multivariate regression incorporating store size and economic variables
+![CPI vs Weekly Sales](screenshots/cpi_vs_sales.png)
 
-Interaction and nonlinear terms to test behavioral hypotheses
+The relationship between CPI and sales varies by region and reverses sign across store clusters — a finding that explains why CPI alone accounts for less than 1% of sales variance.
 
-Train/test split for out-of-sample prediction
+![Temperature Curve](screenshots/temperature_curve.png)
 
-Log transformation of weekly sales to address scale and heteroskedasticity
+Temperature has a curvilinear effect on sales — an inverted U-shape consistent with consumer behavior. Neither extreme cold nor extreme heat is good for foot traffic.
 
-Models are evaluated using Adjusted R², RMSE, and MAE, with careful distinction between explanatory fit and predictive accuracy.
+**Final model findings:**
 
-**Final Model Summary**
+- **Store size** is the dominant predictor of weekly sales, dwarfing all macroeconomic variables
+- **Holiday weeks** are associated with a 6–7% increase in sales
+- **CPI** has a statistically significant negative relationship with sales after controlling for store characteristics
+- **Temperature and unemployment** exhibit modest, intuitive effects
+- **Fuel prices** do not meaningfully impact sales once other factors are controlled
 
-The final specification uses a log-linear regression with weekly sales transformed to their natural logarithm. This model achieves an Adjusted R² of approximately 0.71, substantially improving fit and stabilizing variance across stores with widely differing revenue levels.
+---
 
-Key findings include:
+## Predictive Performance
 
-+ Store size is the strongest predictor of weekly sales
+Using a 75/25 train/test split, the final log-linear model achieves:
 
-+ Holiday weeks increase sales by roughly 6–7%
+| Metric | Value |
+|--------|-------|
+| RMSE | ≈ $240,000 |
+| MAE | ≈ $179,000 |
 
-+ CPI has a statistically significant negative relationship with sales
+Given that weekly store sales range from approximately $70K to $2.8M with a mean of $740K, these error levels are considered reasonable for a model of this specification.
 
-T+ emperature and unemployment have modest, intuitive effects
+---
 
-+ Fuel prices do not meaningfully impact sales once other factors are controlled for
+## Limitations
 
-+ This model provides a strong balance of interpretability, robustness, and practical relevance.
+| Limitation | Notes |
+|------------|-------|
+| No store fixed effects | Store-level idiosyncrasies are not explicitly modeled |
+| Temporal structure | Autocorrelation and seasonality are handled implicitly, not directly |
+| Geographic aggregation | CPI and unemployment measured at broader levels than individual stores |
+| Linear assumptions | Nonlinear and interaction effects beyond those tested may exist |
 
-**Predictive Performance**
+---
 
-Using a 75/25 train-test split, the final predictive model achieves:
+## Next Steps
 
-RMSE: ≈ $240,000
+- Implement mixed-effects (hierarchical) models to capture store-specific variation
+- Explore time-series methods for improved short-term forecasting
+- Apply regularization (LASSO/Ridge) for feature selection
+- Incorporate promotional, demographic, or foot traffic data if available
 
-MAE: ≈ $179,000
+---
 
-Given that weekly store sales range from approximately $70K to $2.8M, these error levels are considered reasonable.
+## Tools & Libraries
 
-**Tools & Libraries**
+| Package | Purpose |
+|---------|---------|
+| `tidyverse` | Data manipulation and visualization |
+| `tidymodels` | Modeling framework |
+| `tidylog` | Pipeline transparency |
+| `ggplot2` / `plotly` | Static and interactive visualization |
+| `gganimate` | Animated store-level analysis |
+| `lubridate` | Date handling |
 
-tidyverse – Data manipulation and visualization
+---
 
-tidymodels – Modeling framework
+## How to Run
 
-tidylog – Pipeline transparency
+1. Clone the repository
+2. Place `walmart.csv` in the `data/` directory
+3. Open `walmart_sales_analysis.Rmd` in RStudio
+4. Knit to HTML or PDF
 
-ggplot2 / plotly – Visualization
+Or view the fully rendered notebook directly on [Kaggle](https://www.kaggle.com/code/ericfrederic/analyzing-drivers-of-walmart-weekly-sales-regress).
 
-gganimate – Animated store-level analysis
+---
 
-lubridate – Date handling
-
-Repository Structure
-├── data/
-│   └── walmart.csv
-├── walmart_sales_analysis.Rmd
-├── README.md
-├── .gitignore
-└── outputs/
-    └── walmart_sales_analysis.html
-
-**How to Run**
-
-Clone the repository
-
-Ensure walmart.csv is located in the data/ directory
-
-Open walmart_sales_analysis.Rmd in RStudio
-
-Knit to HTML or PDF
-
-**Limitations**
-
-Store-level fixed effects are not explicitly modeled
-
-Temporal autocorrelation and seasonality are not directly addressed
-
-Some economic indicators are measured at broader geographic levels
-
-Linear assumptions may obscure more complex nonlinear dynamics
-
-**Next Steps**
-
-Implement mixed-effects models to capture store-specific variation
-
-Explore time-series methods for improved short-term forecasting
-
-Apply regularization (LASSO/Ridge) for feature selection
-
-Incorporate promotional or demographic data if available
-
-**Author**
-
-Eric Frederic
+*MIT License — see LICENSE for details*
